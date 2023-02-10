@@ -8,10 +8,13 @@ BUILD_PUBLISHER_URL ?= http://localhost/
 
 archive := build.tar.gz
 container := $(machine)-root
-chroot := buildah run --mount=type=tmpfs,tmpfs-mode=755,destination=/run $(container) --
+repos_dir := /var/db/repos
+chroot := buildah run \
+	--mount=type=tmpfs,tmpfs-mode=755,destination=/run \
+	--volume $(CURDIR)/repos:$(repos_dir) \
+	$(container) --
 config := $(notdir $(wildcard $(machine)/configs/*))
 config_targets := $(config:=.copy_config)
-repos_dir := /var/db/repos
 repos := $(shell cat $(machine)/repos)
 repos_targets := $(repos:=.add_repo)
 stage4 := stage4.tar.xz
@@ -37,9 +40,10 @@ gbp.json: world
 	./gbp-meta.py $(machine) $(build) > $@
 
 
-%.add_repo: %-repo.tar.gz container
-	buildah unshare --mount CHROOT=$(container) sh -c 'rm -rf $$CHROOT$(repos_dir)/$*'
-	buildah add $(container) $(CURDIR)/$< $(repos_dir)/$*
+%.add_repo: %-repo.tar.gz
+	rm -rf repos/$*
+	mkdir -p repos/$*
+	tar xf $< -C repos/$*
 	touch $@
 
 
@@ -78,8 +82,8 @@ archive: $(archive)  ## Create the build artifact
 $(archive): gbp.json
 	tar cvf build.tar --files-from /dev/null
 	tar --append -f build.tar -C $(machine)/configs .
-	buildah copy $(container) gbp.json /var/db/repos/gbp.json
-	buildah unshare --mount CHROOT=$(container) sh -c 'tar --append -f build.tar -C $${CHROOT}/var/db repos'
+	cp gbp.json repos/gbp.json
+	tar --append -f build.tar repos
 	buildah unshare --mount CHROOT=$(container) sh -c 'tar --append -f build.tar -C $${CHROOT}/var/cache binpkgs'
 	rm -f $@
 	gzip build.tar
