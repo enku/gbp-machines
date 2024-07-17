@@ -1,1 +1,1 @@
-../../var/db/repos/gentoo/profiles/default/linux/arm64/17.0/systemd/merged-usr
+../../var/db/repos/gentoo/profiles/default/linux/arm64/23.0/systemd
