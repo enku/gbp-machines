@@ -17,7 +17,7 @@ cache: ## Regenerate the dependency cache
 
 
 .PHONY: world
-world: ## Update @world and remove unneeded pkgs & binpkgs
+world: clean  ## Update @world and remove unneeded pkgs & binpkgs
 	MAKELEVEL=0 emerge $(opts) --usepkg=y @world app-portage/gentoolkit
 	emerge $(universal_opts) --changed-deps=n --usepkg=n --getbinpkg=n @preserved-rebuild
 	emerge $(universal_opts) --depclean --exclude=app-portage/gentoolkit --quiet
@@ -31,4 +31,4 @@ emerge-info:  ## Run emerge --info
 
 .PHONY: clean
 clean:  ## Clean out temporary files
-	rm -rf /var/tmp/portage
+	shopt -s dotglob; rm -rf /var/tmp/portage/*
