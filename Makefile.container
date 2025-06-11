@@ -24,6 +24,11 @@ world: clean  ## Update @world and remove unneeded pkgs & binpkgs
 	eclean-pkg --changed-deps --deep --quiet
 
 
+.PHONY: %.package
+%.package: clean   # Install the given package
+	MAKELEVEL=0 emerge --verbose --color=n --nospinner --changed-deps=n --usepkg=n --getbinpkg=n --oneshot $*
+
+
 .PHONY: emerge-info
 emerge-info:  ## Run emerge --info
 	emerge $(universal_opts) --info
