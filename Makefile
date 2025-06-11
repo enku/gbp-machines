@@ -5,6 +5,7 @@
 machine ?= gbpbox
 build ?= 1
 BUILD_PUBLISHER_URL ?= http://localhost/
+BUILD_TARGET ?= world
 
 archive := build.tar.gz
 container := $(machine)-root
@@ -29,6 +30,11 @@ stage3-config := $(machine)/stage3
 # Container platform to use (less the "linux/" part)
 platform-config := $(machine)/arch
 
+ifeq ($(MAKECMDGOALS),world)
+ifneq ($(BUILD_TARGET),world)
+$(shell rm -f world)
+endif
+endif
 
 container: stage3-image := docker.io/gentoo/stage3:$(shell cat $(stage3-config))
 container: platform := linux/$(shell cat $(platform-config))
@@ -65,7 +71,7 @@ chroot: $(repos_targets) $(config_targets)  ## Build the chroot in the container
 
 
 world: chroot  ## Update @world and remove unneeded pkgs & binpkgs
-	$(chroot) make -C / -f Makefile.gbp world
+	$(chroot) make -C / -f Makefile.gbp '$(BUILD_TARGET)'
 	touch $@
 
 
@@ -107,7 +113,11 @@ emerge-info.txt: chroot
 
 push: packages  ## Push artifact (to GBP)
 	$(MAKE) machine=$(machine) build=$(build) $(archive)
-	gbp --url=$(BUILD_PUBLISHER_URL) pull $(machine) $(build)
+ifneq ($(BUILD_TARGET),world)
+	gbp --url=$(GBP_URL) pull --note="Built $(BUILD_TARGET)" $(machine) $(build)
+else
+	gbp --url=$(GBP_URL) pull $(machine) $(build)
+endif
 	touch $@
 
 
