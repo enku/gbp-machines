@@ -114,9 +114,9 @@ emerge-info.txt: chroot
 push: packages  ## Push artifact (to GBP)
 	$(MAKE) machine=$(machine) build=$(build) $(archive)
 ifneq ($(BUILD_TARGET),world)
-	gbp --url=$(GBP_URL) pull --note="Built $(BUILD_TARGET)" $(machine) $(build)
+	gbp --url=$(BUILD_PUBLISHER_URL) pull --note="Built $(BUILD_TARGET)" $(machine) $(build)
 else
-	gbp --url=$(GBP_URL) pull $(machine) $(build)
+	gbp --url=$(BUILD_PUBLISHER_URL) pull $(machine) $(build)
 endif
 	touch $@
 
